@@ -16,6 +16,8 @@ import OptionSpecs from "./option.spec";
 import OptionsSpecs from "./options.spec";
 import SelectSpecs from "./select.spec";
 
+import OptionSelectionProviderSpecs from "./providers/option-selection.service.spec";
+
 describe("Select component", function() {
     addHelpers();
 
@@ -23,5 +25,9 @@ describe("Select component", function() {
         SelectSpecs();
         OptionsSpecs();
         OptionSpecs();
+    });
+
+    describe("Providers", () => {
+        OptionSelectionProviderSpecs();
     });
 });

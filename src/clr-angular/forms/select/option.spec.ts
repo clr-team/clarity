@@ -12,6 +12,7 @@ import {POPOVER_HOST_ANCHOR} from "../../popover/common/popover-host-anchor.toke
 import {IfOpenService} from "../../utils/conditional/if-open.service";
 
 import {ClrOption} from "./option";
+import {OptionSelectionService} from "./providers/option-selection.service";
 
 @Component({
     template: `
@@ -19,7 +20,7 @@ import {ClrOption} from "./option";
             Test
         </clr-option>
     `,
-    providers: [IfOpenService, {provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef}]
+    providers: [IfOpenService, {provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef}, OptionSelectionService]
 })
 class TestComponent {
 }
@@ -30,7 +31,7 @@ class TestComponent {
             Test
         </clr-option>
     `,
-    providers: [IfOpenService]
+    providers: [IfOpenService, OptionSelectionService]
 })
 class TestComponentWithError {
 }
@@ -39,6 +40,7 @@ export default function(): void {
     describe("Select Option Component", function() {
         let context: TestContext<ClrOption, TestComponent>;
         let ifOpenService: IfOpenService;
+        let optionSelectionService: OptionSelectionService;
 
         describe("View Basics", function() {
             beforeEach(function() {
@@ -50,13 +52,24 @@ export default function(): void {
                 expect(context.clarityElement.textContent.trim()).toMatch("Test");
             });
 
-            it("closes the menu when an item is clicked", () => {
+            it("closes the menu when an option is clicked", () => {
                 const option = context.clarityElement;
-                spyOn(context.clarityDirective, "closeMenuOnClick");
+                spyOn(context.clarityDirective, "updateSelectionAndCloseMenu");
 
                 option.click();
 
-                expect(context.clarityDirective.closeMenuOnClick).toHaveBeenCalled();
+                expect(context.clarityDirective.updateSelectionAndCloseMenu).toHaveBeenCalled();
+            });
+
+            it("adds the active class on the option when it is clicked", () => {
+                let option: HTMLElement = context.clarityElement;
+                expect(option.classList.contains("active")).toBe(false);
+
+                option.click();
+                context.detectChanges();
+
+                option = context.clarityElement;
+                expect(option.classList.contains("active")).toBe(true);
             });
         });
 
@@ -64,14 +77,27 @@ export default function(): void {
             beforeEach(function() {
                 context = this.create(ClrOption, TestComponent, []);
                 ifOpenService = context.getClarityProvider(IfOpenService);
+                optionSelectionService = context.getClarityProvider(OptionSelectionService);
             });
 
             it("closes the menu when an item is clicked", () => {
                 ifOpenService.open = true;
 
-                context.clarityDirective.closeMenuOnClick();
+                context.clarityDirective.updateSelectionAndCloseMenu();
 
                 expect(ifOpenService.open).toBe(false);
+            });
+
+            it("calls to update the selection when an item is clicked", () => {
+                spyOn(optionSelectionService, "updateSelection");
+
+                context.clarityDirective.updateSelectionAndCloseMenu();
+
+                expect(optionSelectionService.updateSelection).toHaveBeenCalled();
+            });
+
+            it("provides a ref to the ElementRef of the option", () => {
+                expect(context.clarityDirective.elRef).toBeDefined();
             });
         });
 
